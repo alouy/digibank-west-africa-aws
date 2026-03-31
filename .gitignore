@@ -1,6 +1,5 @@
-*.zip
 *.pyc
 __pycache__/
 .env
-*.json
-!requirements.txt
+*.zip
+*.log

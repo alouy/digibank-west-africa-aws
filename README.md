@@ -31,27 +31,52 @@ Aurora   : digibank-aurora.cluster-c5m2owwwikua.eu-north-1.rds.amazonaws.com
 Redshift : digibank-redshift.crs3k2rakdhw.eu-north-1.redshift.amazonaws.com
 ```
 
+## 🖼️ Diagramme Architecture
+![Architecture AWS](docs/architecture_aws.png)
+
 ## 📊 Dataset PaySim
 - Source : [Kaggle — Synthetic Financial Datasets For Fraud Detection](https://www.kaggle.com/datasets/ealaxi/paysim1)
-- **6.3 millions** de lignes chargées
-- **100 000** transactions dans Aurora MySQL
+- **6.3 millions** de lignes disponibles
+- **100 000** transactions chargées dans Aurora MySQL
 - **116 fraudes** détectées ($62.8M)
 
 ## 🔌 API Flask — 3 Endpoints
 ```bash
 # Health check
 GET  /health
+→ {"status": "healthy", "service": "DigiBank API"}
 
 # Enregistrer une transaction
 POST /transaction
 Body: {"client_id": "C1231006815", "type": "CREDIT", "montant": 5000}
+→ {"message": "Transaction enregistree", "solde_apres": 5000}
 
 # Consulter le solde
 GET  /client/{client_id}/solde
+→ {"client_id": "C1231006815", "solde": 34008736.98}
 
 # Statistiques journalières
 GET  /stats/journalier
+→ {"date": "2026-03-31", "stats": {...}}
 ```
+
+## 🧪 Tester avec Postman
+1. Ouvrir Postman
+2. **Import** → glisser-déposer `docs/postman_collection.json`
+3. La variable `BASE_URL` est déjà configurée
+4. Lancer les 9 requêtes dans l'ordre
+
+| # | Requête | Méthode | Description |
+|---|---|---|---|
+| 1 | /health | GET | Santé de l'API |
+| 2 | /transaction CREDIT | POST | Créditer un client |
+| 3 | /transaction DEBIT | POST | Débiter un client |
+| 4 | /transaction FRAUDE | POST | Client frauduleux PaySim |
+| 5 | /client/{id}/solde | GET | Consulter le solde |
+| 6 | /client/top1/solde | GET | Client le plus riche ($34M) |
+| 7 | /stats/journalier | GET | Stats du jour |
+| 8 | /client/inexistant | GET | Test erreur 404 |
+| 9 | /transaction insuffisant | POST | Test erreur 400 |
 
 ## 💰 Analyse TCO
 | Infrastructure | Coût mensuel | Coût annuel |
@@ -70,39 +95,6 @@ GET  /stats/journalier
 - ✅ Security Groups : ALB(80/443) → EC2(5000) → RDS(3306)
 - ✅ Aucun credential hardcodé dans le code
 
-## 📁 Structure du projet
-```
-digibank-west-africa-aws/
-├── api/
-│   ├── app.py                    # API Flask 3 endpoints
-│   └── requirements.txt          # Dépendances Python
-├── lambdas/
-│   ├── digibank-batch-aggregation/   # Agrégation quotidienne
-│   ├── digibank-charger-donnees/     # Chargement PaySim
-│   ├── digibank-redshift-analytics/  # 5 requêtes Redshift
-│   ├── digibank-init-db/             # Init tables Aurora
-│   └── digibank-verif-db/            # Vérification données
-├── database/
-│   ├── init_schema.sql               # Schema Aurora MySQL
-│   └── redshift/
-│       └── requetes_analytiques.sql  # 5 requêtes analytiques
-├── infrastructure/
-│   ├── deploy_complet.sh             # Script déploiement VPC
-│   ├── setup_monitoring.sh           # 5 alarmes CloudWatch
-│   └── ressources.md                 # IDs ressources AWS
-├── docs/
-│   ├── architecture_aws.svg          # Diagramme architecture
-│   ├── postman_collection.json       # Tests API Postman
-│   ├── tco_analyse.md                # Analyse TCO complète
-│   └── well_architected.md           # Rapport 5 piliers
-└── README.md
-```
-
-## 🧪 Tester l'API avec Postman
-1. Importer `docs/postman_collection.json` dans Postman
-2. La variable `BASE_URL` est déjà configurée
-3. Lancer les 5 requêtes dans l'ordre
-
 ## 📈 Well-Architected Framework
 | Pilier | Score | Action prioritaire |
 |---|---|---|
@@ -112,5 +104,41 @@ digibank-west-africa-aws/
 | Performance | ★★★★☆ | Provisioned Concurrency Lambda |
 | Optimisation Coûts | ★★★☆☆ | Redshift pause + Reserved Instances |
 
-## 🚀 Région AWS
-`eu-north-1` (Stockholm) — 2 Availability Zones : eu-north-1a · eu-north-1b
+## 📁 Structure du projet
+```
+digibank-west-africa-aws/
+├── api/
+│   ├── app.py                         # API Flask 3 endpoints
+│   └── requirements.txt               # Dépendances Python
+├── lambdas/
+│   ├── digibank-batch-aggregation/    # Agrégation quotidienne Aurora→S3
+│   ├── digibank-charger-donnees/      # Chargement PaySim dans Aurora
+│   ├── digibank-redshift-analytics/   # 5 requêtes analytiques Redshift
+│   ├── digibank-init-db/              # Initialisation tables Aurora
+│   └── digibank-verif-db/             # Vérification données
+├── database/
+│   ├── init_schema.sql                # Schema Aurora MySQL
+│   └── redshift/
+│       └── requetes_analytiques.sql   # 5 requêtes analytiques
+├── infrastructure/
+│   ├── deploy_complet.sh              # Script déploiement VPC complet
+│   ├── setup_monitoring.sh            # 5 alarmes CloudWatch
+│   └── ressources.md                  # IDs ressources AWS déployées
+├── docs/
+│   ├── architecture_aws.png           # Diagramme architecture complet
+│   ├── DigiBank_Soutenance.pptx       # Slides soutenance 10 slides
+│   ├── WellArchitected_DigiBank.docx  # Rapport Well-Architected 5 piliers
+│   ├── postman_collection.json        # Collection Postman 9 requêtes
+│   ├── tco_analyse.md                 # Analyse TCO détaillée
+│   └── well_architected.md            # Résumé Well-Architected
+└── README.md
+```
+
+## 🚀 Déploiement
+Région AWS : `eu-north-1` (Stockholm)
+2 Availability Zones : `eu-north-1a` · `eu-north-1b`
+
+## 📚 Ressources
+- [AWS Well-Architected Framework](https://aws.amazon.com/architecture/well-architected)
+- [Dataset PaySim Kaggle](https://www.kaggle.com/datasets/ealaxi/paysim1)
+- [AWS Academy Cloud Foundations](https://aws.amazon.com/training/awsacademy/)

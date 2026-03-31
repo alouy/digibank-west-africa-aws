@@ -1,0 +1,40 @@
+{
+  "info": {
+    "name": "DigiBank West Africa API",
+    "description": "Collection Postman pour tester l'API Flask DigiBank",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [{"key": "BASE_URL", "value": "http://digibank-alb-1985318916.eu-north-1.elb.amazonaws.com"}],
+  "item": [
+    {
+      "name": "1 - Health Check",
+      "request": {"method": "GET", "url": "{{BASE_URL}}/health"}
+    },
+    {
+      "name": "2 - POST Transaction CREDIT",
+      "request": {
+        "method": "POST",
+        "url": "{{BASE_URL}}/transaction",
+        "header": [{"key": "Content-Type", "value": "application/json"}],
+        "body": {"mode": "raw", "raw": "{\"client_id\": \"C1231006815\", \"type\": \"CREDIT\", \"montant\": 5000}"}
+      }
+    },
+    {
+      "name": "3 - POST Transaction DEBIT",
+      "request": {
+        "method": "POST",
+        "url": "{{BASE_URL}}/transaction",
+        "header": [{"key": "Content-Type", "value": "application/json"}],
+        "body": {"mode": "raw", "raw": "{\"client_id\": \"C1231006815\", \"type\": \"DEBIT\", \"montant\": 1000}"}
+      }
+    },
+    {
+      "name": "4 - GET Solde Client",
+      "request": {"method": "GET", "url": "{{BASE_URL}}/client/C1231006815/solde"}
+    },
+    {
+      "name": "5 - GET Stats Journalier",
+      "request": {"method": "GET", "url": "{{BASE_URL}}/stats/journalier"}
+    }
+  ]
+}
